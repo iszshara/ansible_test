@@ -1,0 +1,10 @@
+---
+
+- hosts: all
+  become: true
+  tasks:
+
+    - name: installing tree
+      apt:
+        name: tree
+        state: latest
