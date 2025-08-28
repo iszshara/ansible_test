@@ -1,2 +1,2 @@
-192.168.224.136
-192.169.224.137
+192.168.224.138 ansible_user=user1 ansible_ssh_private_key_file=~/.ssh/ansible
+192.168.224.137 ansible_user=user2 ansible_ssh_private_key_file=~/.ssh/ansible
