@@ -1,0 +1,102 @@
+---
+
+- name: Playbook for Installing DOMjudge on a Debian Server. Should be executed on the chosen Server!
+  hosts: controller
+  become: yes
+
+  vars_prompt:
+    - name: username
+      prompt: "Enter a  username to create a Domjudge user"
+      private: no
+
+
+  tasks:
+    - name: Installing the necessary Software
+      apt:
+        name: "{{ item }}"
+        state: latest 
+        update_cache: yes
+      loop:
+        - libcgroup-dev
+        - make
+        - acl
+        - zip
+        - unzip
+        - mariadb-server
+        - apache2
+        - php
+        - php-fpm
+        - php-gd
+        - php-cli
+        - php-intl
+        - php-mbstring
+        - php-mysql
+        - php-curl
+        - php-json
+        - php-xml
+        - php-zip
+        - composer
+        - ntp
+        - gcc
+        - pkg-config
+        - build-essential
+
+    - name: Creating user {{ username }}
+      ansible.builtin.user:
+        name: "{{ username }}"
+        shell: /bin/bash
+        create_home: yes   
+          
+    - name: Creating new Directory >>> Domjudge
+      ansible.builtin.file:
+        path: /home/{{ username }}/Domjudge
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0755'
+      become: true
+
+    - name: Downloading Domjudge
+      ansible.builtin.get_url:
+        url: https://www.domjudge.org/releases/domjudge-8.3.2.tar.gz
+        dest: /home/{{ username }}/Domjudge
+      become_user: "{{ username }}"
+
+    - name: Setting Ownership
+      ansible.builtin.file:
+        path: /home/{{ username }}/Domjudge/domjudge-8.3.2
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0755'
+        recurse: yes
+      become: true
+
+    - name: Unarchive Domjudge
+      ansible.builtin.unarchive:
+        src: /home/{{ username }}/Domjudge/domjudge-8.3.2.tar.gz
+        dest: /home/{{ username }}/Domjudge
+        remote_src: yes
+        owner: "{{ username }}"
+        group: "{{ username }}" 
+      become: true    
+
+    - name: Configure Domjudge
+      ansible.builtin.command: ./configure --prefix=/home/{{ username }}/Domjudge
+      args:
+        chdir: /home/{{ username }}/Domjudge/domjudge-8.3.2
+      
+      become_user: "{{ username }}" 
+
+    - name: Compile Domjudge
+      ansible.builtin.command: make domserver
+      args:
+        chdir: /home/{{ username }}/Domjudge/domjudge-8.3.2
+      become: true
+      become_user: "{{ username }}"
+
+    - name: Install Domjudge
+      ansible.builtin.command: make install-domserver
+      args:
+        chdir: /home/{{ username }}/Domjudge/domjudge-8.3.2
+      become: true
+
